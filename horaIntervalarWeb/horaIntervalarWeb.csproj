@@ -66,7 +66,7 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="HoraIntervalar.js" />
+    <Content Include="horaIntervalar.js" />
     <None Include="package.json" />
     <Content Include="packages.config" />
     <None Include="Web.Debug.config">
@@ -408,7 +408,7 @@
     <Content Include="Scripts\Office\metadata\endpoints.xml" />
     <Content Include="Scripts\Office\metadata\features.xml" />
     <Content Include="Scripts\Office\MicrosoftAjax.js" />
-    <Content Include="test\HoraIntervalarTest.js" />
+    <Content Include="test\horaIntervalarTest.js" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
