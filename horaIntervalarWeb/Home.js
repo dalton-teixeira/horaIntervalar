@@ -46,6 +46,7 @@
             var sheet = ctx.workbook.worksheets.getActiveWorksheet();
             // Queue a command to write the sample data to the worksheet
             sheet.getRange("B3:D5").values = values;
+            sheet.getRange("B1:B1").values = [[1000]];
             var test = sheet.getCell(3, 1).select();
           
             // Run the queued-up commands, and return a promise to indicate task completion

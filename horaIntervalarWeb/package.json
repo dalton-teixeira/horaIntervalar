@@ -1,0 +1,7 @@
+{
+  "name": "hora_intervalar",
+  "version": "0.0.1-beta",
+  "scripts": {
+    "test": "mocha"
+  }
+}
