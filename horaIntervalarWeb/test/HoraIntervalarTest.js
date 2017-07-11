@@ -48,7 +48,7 @@ describe('CalcInterval', function () {
             interval.ExpectedStart = new Date(2017, 0, 24, 08, 00);
             interval.End = new Date(2017, 0, 24, 12, 05);
             interval.ExpectedEnd = new Date(2017, 0, 24, 12, 00);
-            console.log(interval);
+           
             //act
             result = sut.roundInterval(interval);
 
