@@ -66,8 +66,10 @@
     <Reference Include="System.EnterpriseServices" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="horaIntervalar.js" />
     <None Include="package.json" />
+    <Content Include="interval\CalcInterval.js" />
+    <Content Include="interval\models\Interval.js" />
+    <Content Include="interval\models\WorkedDay.js" />
     <Content Include="packages.config" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
