@@ -11,5 +11,8 @@
     set ExpectedStart(value) { this.expectedStart = value; }
     get ExpectedEnd() { return this.expectedEnd; }
     set ExpectedEnd(value) { this.expectedEnd = value; }
+
+    totalStart() { return this.expectedStart - this.start; }
+    totalEnd() { return this.end - this.expectedEnd; }
 }
 module.exports = Interval;

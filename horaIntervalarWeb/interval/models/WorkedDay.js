@@ -5,11 +5,11 @@ class WorkedDay {
         this.secondInterval = new Interval();
     }
 
-    get firstInterval() { return this.firstInterval; }
-    get secondInterval() { return this.secondInterval; }
+    get FirstInterval() { return this.firstInterval; }
+    get SecondInterval() { return this.secondInterval; }
 
-    set firstInterval(interval) { this.firstInterval = interval; }
-    set secondInterval(interval) { this.secondInterval = interval; }
+    set FirstInterval(interval) { this.firstInterval = interval; }
+    set SecondInterval(interval) { this.secondInterval = interval; }
     
 }
 module.exports = WorkedDay;
