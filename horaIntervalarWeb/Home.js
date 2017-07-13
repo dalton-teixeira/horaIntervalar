@@ -43,16 +43,31 @@
         // Run a batch operation against the Excel object model
         Excel.run(function (ctx) {
             // Create a proxy object for the active sheet
-            var sheet = ctx.workbook.worksheets.getActiveWorksheet();
+            //var sheet = ctx.workbook.worksheets.getActiveWorksheet();
             // Queue a command to write the sample data to the worksheet
-            sheet.getRange("B3:D5").values = values;
-            sheet.getRange("B1:B1").values = [[1000]];
-            var test = sheet.getCell(3, 1).select();
+            //sheet.getRange("B3:D5").values = values;
+            //sheet.getRange("B1:B1").values = [[1000]];
+            //var test = sheet.getCell(3, 1).select();
           
             // Run the queued-up commands, and return a promise to indicate task completion
             return ctx.sync();
         })
         .catch(errorHandler);
+    }
+    function createDate(number) {
+        var result = new Date((number - 25569) * 86400 * 1000);
+        var seconds = result.getSeconds();
+        
+        if (seconds > 30) {
+            result.setMinutes(result.getMinutes() + 1);
+            result.setSeconds(0);
+            return result;
+        } else if (seconds > 0 && seconds < 30) {
+            result.setMinutes(result.getMinutes() - 1);
+            result.setSeconds(0);
+            return result;
+        }
+        return result;
     }
 
     function hightlightHighestValue() {
@@ -60,9 +75,14 @@
         Excel.run(function (ctx) {
             // Create a proxy object for the selected range and load its properties
             var sourceRange = ctx.workbook.getSelectedRange().load("values, rowCount, columnCount");
-
+            ctx.sync()
+                .then(function () {
+                    var date = sourceRange.values[0][0];
+                    var hours = sourceRange.values[0][2];
+                    var result = createDate(date + hours);
+                });
             // Run the queued-up command, and return a promise to indicate task completion
-            return ctx.sync()
+            /*return ctx.sync()
                 .then(function () {
                     var highestRow = 0;
                     var highestCol = 0;
@@ -87,7 +107,7 @@
                     cellToHighlight.format.fill.color = "orange";
                     cellToHighlight.format.font.bold = true;
                 })
-                .then(ctx.sync);
+                .then(ctx.sync);*/
         })
         .catch(errorHandler);
     }
