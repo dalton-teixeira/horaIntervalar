@@ -8,7 +8,23 @@ class CalcInterval {
         this.NEGATIVE = '-';
         this.POSITIVE = '+';
     }
-    
+
+    totalDay(workedDay) {
+        workedDay = this.roundTens(workedDay);
+        var result = workedDay.firstInterval.End - workedDay.firstInterval.Start;
+        if (workedDay.secondInterval == null) return result;
+        return result + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+    }
+
+    formatTotalHours(number) {
+        var totalHours = this.createDate(number);
+        var _h = totalHours.getUTCHours().toString();
+        var _m = totalHours.getUTCMinutes().toString();
+        if (_h.length == 1) _h = "0" + _h;
+        if (_m.length == 1) _m = "0" + _m;
+        return _h + ":" + _m;
+    }
+
     totalNegatives(interval) {
         var result = interval.totalStart() < 0 ? interval.totalStart() : 0;
         result = interval.totalEnd() < 0 ? result + interval.totalEnd() : result;
@@ -67,6 +83,22 @@ class CalcInterval {
         }
 
         return workedDay;
+    }
+
+    createDate(number) {
+        var result = new Date(number);
+        var seconds = result.getSeconds();
+
+        if (seconds > 30) {
+            result.setMinutes(result.getMinutes() + 1);
+            result.setSeconds(0);
+            return result;
+        } else if (seconds > 0 && seconds < 30) {
+            result.setMinutes(result.getMinutes() - 1);
+            result.setSeconds(0);
+            return result;
+        }
+        return result;
     }
 
 }

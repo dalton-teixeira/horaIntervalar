@@ -272,4 +272,31 @@ describe('CalcInterval', function () {
         });
     });
 
+    describe('#totalDay(workedDay)', function () {
+        it('Should get total day.', function () {
+            //arrange
+            var sut = new CalcInterval();
+            var firstInterval = new Interval();
+            firstInterval.Start = new Date(2017, 0, 24, 07, 55);
+            firstInterval.ExpectedStart = new Date(2017, 0, 24, 08, 00);
+            firstInterval.End = new Date(2017, 0, 24, 11, 58);
+            firstInterval.ExpectedEnd = new Date(2017, 0, 24, 12, 00);
+
+            var secondInterval = new Interval();
+            secondInterval.Start = new Date(2017, 0, 24, 13, 02);
+            secondInterval.ExpectedStart = new Date(2017, 0, 24, 13, 00);
+            secondInterval.End = new Date(2017, 0, 24, 17, 59);
+            secondInterval.ExpectedEnd = new Date(2017, 0, 24, 18, 00);
+
+            var workedDay = new WorkedDay();
+            workedDay.firstInterval = firstInterval;
+            workedDay.secondInterval = secondInterval;
+
+            //act
+            var result = sut.totalDay(workedDay);
+            //assert
+            assert.equal("09:00", sut.formatTotalHours(result));
+        });
+    });
+
 });

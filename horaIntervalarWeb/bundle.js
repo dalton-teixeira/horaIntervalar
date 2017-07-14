@@ -58,6 +58,7 @@ var Controller = require("./interval/Controller.js");
             var sourceRange = ctx.workbook.getSelectedRange().load("values, rowCount, columnCount");
 
             return ctx.sync().then(function () {
+                var sheet = ctx.workbook.worksheets.getActiveWorksheet();
                 var date = sourceRange.values[0][0];
                 var startHours = sourceRange.values[0][2];
                 var endHours = sourceRange.values[0][3];
@@ -66,7 +67,8 @@ var Controller = require("./interval/Controller.js");
                 var expectedEnd = $("#first-end").val();
                 var controller = new Controller();
                 var result = controller.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
-
+                sourceRange.getCell(0, sourceRange.columnCount).values = [[result]];
+                //sheet.getCell( getRange("N1:B1").values = [[1000]]
                 //var result = calcInterval.roundTens(workedDay);
             });
 
@@ -147,6 +149,24 @@ var CalcInterval = function () {
     }
 
     _createClass(CalcInterval, [{
+        key: 'totalDay',
+        value: function totalDay(workedDay) {
+            workedDay = this.roundTens(workedDay);
+            var result = workedDay.firstInterval.End - workedDay.firstInterval.Start;
+            if (workedDay.secondInterval == null) return result;
+            return result + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+        }
+    }, {
+        key: 'formatTotalHours',
+        value: function formatTotalHours(number) {
+            var totalHours = this.createDate(number);
+            var _h = totalHours.getUTCHours().toString();
+            var _m = totalHours.getUTCMinutes().toString();
+            if (_h.length == 1) _h = "0" + _h;
+            if (_m.length == 1) _m = "0" + _m;
+            return _h + ":" + _m;
+        }
+    }, {
         key: 'totalNegatives',
         value: function totalNegatives(interval) {
             var result = interval.totalStart() < 0 ? interval.totalStart() : 0;
@@ -206,6 +226,23 @@ var CalcInterval = function () {
             }
 
             return workedDay;
+        }
+    }, {
+        key: 'createDate',
+        value: function createDate(number) {
+            var result = new Date(number);
+            var seconds = result.getSeconds();
+
+            if (seconds > 30) {
+                result.setMinutes(result.getMinutes() + 1);
+                result.setSeconds(0);
+                return result;
+            } else if (seconds > 0 && seconds < 30) {
+                result.setMinutes(result.getMinutes() - 1);
+                result.setSeconds(0);
+                return result;
+            }
+            return result;
         }
     }]);
 
@@ -277,10 +314,9 @@ var Controller = function () {
             workedDay.firstInterval = firstInterval;
             workedDay.secondInterval = null;
 
-            var result = calcInterval.roundTens(workedDay);
-            result.firstInterval = this.toExcelDateTime(result.firstInterval);
-            result.secondInterval = this.toExcelDateTime(result.secondInterval);
-            return result;
+            var totalHours = calcInterval.formatTotalHours(calcInterval.totalDay(workedDay));
+
+            return totalHours;
         }
     }, {
         key: 'toExcelDateTime',

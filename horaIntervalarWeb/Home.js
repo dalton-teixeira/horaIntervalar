@@ -57,6 +57,7 @@
 
             return ctx.sync()
                 .then(function () {
+                    var sheet = ctx.workbook.worksheets.getActiveWorksheet();
                     var date = sourceRange.values[0][0];
                     var startHours = sourceRange.values[0][2];
                     var endHours = sourceRange.values[0][3];
@@ -65,7 +66,8 @@
                     var expectedEnd = $("#first-end").val();
                     var controller = new Controller();
                     var result = controller.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
-                    
+                    sourceRange.getCell(0, sourceRange.columnCount).values = [[result]];
+                    //sheet.getCell( getRange("N1:B1").values = [[1000]]
                     //var result = calcInterval.roundTens(workedDay);
 
                 });

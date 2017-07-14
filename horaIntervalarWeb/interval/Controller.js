@@ -18,7 +18,7 @@ class Controller {
         }
         return result;
     }
-
+    
     getExpectedDate(date, value) {
         var hours = parseInt(value.split(":")[0]);
         var minutes = value.split(":")[1];
@@ -55,10 +55,9 @@ class Controller {
         workedDay.firstInterval = firstInterval;
         workedDay.secondInterval = null;
 
-        var result = calcInterval.roundTens(workedDay);
-        result.firstInterval = this.toExcelDateTime(result.firstInterval);
-        result.secondInterval = this.toExcelDateTime(result.secondInterval);
-        return result;
+        var totalHours = calcInterval.formatTotalHours(calcInterval.totalDay(workedDay));
+
+        return totalHours;
     }
 
     toExcelDateTime(interval) {
