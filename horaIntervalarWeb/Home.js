@@ -1,4 +1,5 @@
-﻿(function () {
+﻿const Controller = require("./interval/Controller.js");
+(function () {
     "use strict";
 
     var cellToHighlight;
@@ -23,23 +24,16 @@
             }
 
             $("#template-description").text("This sample highlights the highest value from the cells you have selected in the spreadsheet.");
-            $('#button-text').text("Highlight!");
-            $('#button-desc').text("Highlights the largest number.");
-                
-            loadSampleData();
+            
+            //loadSampleData();
 
             // Add a click event handler for the highlight button.
-            $('#highlight-button').click(hightlightHighestValue);
+            $('#highlight-button').click(calculate);
         });
     };
 
     function loadSampleData() {
-        var values = [
-            [Math.floor(Math.random() * 1000), Math.floor(Math.random() * 1000), Math.floor(Math.random() * 1000)],
-            [Math.floor(Math.random() * 1000), Math.floor(Math.random() * 1000), Math.floor(Math.random() * 1000)],
-            [Math.floor(Math.random() * 1000), Math.floor(Math.random() * 1000), Math.floor(Math.random() * 1000)]
-        ];
-
+     
         // Run a batch operation against the Excel object model
         Excel.run(function (ctx) {
             // Create a proxy object for the active sheet
@@ -54,33 +48,29 @@
         })
         .catch(errorHandler);
     }
-    function createDate(number) {
-        var result = new Date((number - 25569) * 86400 * 1000);
-        var seconds = result.getSeconds();
-        
-        if (seconds > 30) {
-            result.setMinutes(result.getMinutes() + 1);
-            result.setSeconds(0);
-            return result;
-        } else if (seconds > 0 && seconds < 30) {
-            result.setMinutes(result.getMinutes() - 1);
-            result.setSeconds(0);
-            return result;
-        }
-        return result;
-    }
-
-    function hightlightHighestValue() {
+   
+    function calculate() {
         // Run a batch operation against the Excel object model
         Excel.run(function (ctx) {
             // Create a proxy object for the selected range and load its properties
             var sourceRange = ctx.workbook.getSelectedRange().load("values, rowCount, columnCount");
-            ctx.sync()
+
+            return ctx.sync()
                 .then(function () {
                     var date = sourceRange.values[0][0];
-                    var hours = sourceRange.values[0][2];
-                    var result = createDate(date + hours);
+                    var startHours = sourceRange.values[0][2];
+                    var endHours = sourceRange.values[0][3];
+                    
+                    var expectedStart = $("#first-start").val();
+                    var expectedEnd = $("#first-end").val();
+                    var controller = new Controller();
+                    var result = controller.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
+                    
+                    //var result = calcInterval.roundTens(workedDay);
+
                 });
+
+
             // Run the queued-up command, and return a promise to indicate task completion
             /*return ctx.sync()
                 .then(function () {

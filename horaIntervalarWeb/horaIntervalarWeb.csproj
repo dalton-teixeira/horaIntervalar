@@ -67,7 +67,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="package.json" />
+    <Content Include="bundle.js" />
     <Content Include="interval\CalcInterval.js" />
+    <Content Include="interval\Controller.js" />
     <Content Include="interval\models\Interval.js" />
     <Content Include="interval\models\WorkedDay.js" />
     <Content Include="packages.config" />

@@ -47,21 +47,23 @@ class CalcInterval {
     }
     
     roundTens(workedDay) {
-
-        var negatives = (this.totalNegatives(workedDay.firstInterval)) + (this.totalNegatives(workedDay.secondInterval));
-
-        var positives =
-            this.totalPositives(workedDay.firstInterval)
-            + this.totalPositives(workedDay.secondInterval);
+        var isMultipleInterval = workedDay.secondInterval != null;
+        var negatives = this.totalNegatives(workedDay.firstInterval);
+        var positives = this.totalPositives(workedDay.firstInterval);
+        
+        if (isMultipleInterval) {
+            negatives = negatives + this.totalNegatives(workedDay.secondInterval);
+            positives = positives + this.totalPositives(workedDay.secondInterval);
+        }
 
         if (negatives >= -Math.abs(this.TOTAL_MAX_LIMIT)) {
             workedDay.firstInterval = this.roundInterval(workedDay.firstInterval, this.NEGATIVE);
-            workedDay.secondInterval = this.roundInterval(workedDay.secondInterval, this.NEGATIVE);
+            workedDay.secondInterval = isMultipleInterval ? this.roundInterval(workedDay.secondInterval, this.NEGATIVE) : null;
         }
 
         if (positives <= this.TOTAL_MAX_LIMIT) {
             workedDay.firstInterval = this.roundInterval(workedDay.firstInterval, this.POSITIVE);
-            workedDay.secondInterval = this.roundInterval(workedDay.secondInterval, this.POSITIVE);
+            workedDay.secondInterval = isMultipleInterval ? this.roundInterval(workedDay.secondInterval, this.POSITIVE) : null;
         }
 
         return workedDay;

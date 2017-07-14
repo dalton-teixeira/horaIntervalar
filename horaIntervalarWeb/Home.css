@@ -33,3 +33,11 @@ body {
     padding: 18px 15px;
     min-width: inherit;
 }
+.hours {
+    width: 40px;
+    margin: 5px 2px;
+    text-align: right;
+}
+label {
+    margin-left: 20px;
+}
