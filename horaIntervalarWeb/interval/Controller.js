@@ -1,10 +1,46 @@
 ﻿const CalcInterval = require('./CalcInterval.js');
-var Interval = require('./models/Interval.js');
-var WorkedDay = require('./models/WorkedDay.js');
-
+const Factory = require('./Factory.js');
 class Controller {
-    createDate(number) {
-        var result = new Date((number - 25569) * 86400 * 1000);
+        
+    calcule(date
+        , startHours
+        , endHours
+        , expectedStart
+        , expectedEnd
+        , startHours2
+        , endHours2
+        , expectedStart2
+        , expectedEnd2) {
+
+        var factory = new Factory();
+        var calcInterval = new CalcInterval();
+        var workedDay = factory.createWorkedDay(
+                date
+                , startHours
+                , endHours
+                , expectedStart
+                , expectedEnd
+                , startHours2
+                , endHours2
+                , expectedStart2
+                , expectedEnd2);
+
+        var result = calcInterval.totalDay(workedDay);
+
+        return this.formatTotalHours(result);
+    }
+    
+    formatTotalHours(number) {
+        var totalHours = this.createRoundedDate(number);
+        var _h = totalHours.getUTCHours().toString();
+        var _m = totalHours.getUTCMinutes().toString();
+        if (_h.length == 1) _h = "0" + _h;
+        if (_m.length == 1) _m = "0" + _m;
+        return _h + ":" + _m;
+    }
+
+    createRoundedDate(number) {
+        var result = new Date(number);
         var seconds = result.getSeconds();
 
         if (seconds > 30) {
@@ -18,53 +54,6 @@ class Controller {
         }
         return result;
     }
-    
-    getExpectedDate(date, value) {
-        var hours = parseInt(value.split(":")[0]);
-        var minutes = value.split(":")[1];
-        var result = new Date((date - 25569) * 86400 * 1000);
-        result.setHours(result.getHours() + hours);
 
-        if (minutes != undefined) {
-            result.setMinutes(parseInt(minutes));
-        }
-        return result;
-    }
-
-    calcule(date
-        , startHours
-        , endHours
-        , expectedStart
-        , expectedEnd
-
-        , secondStartHours
-        , secondEndHours
-        , secondExpectedStart
-        , secondExpectedEnd) {
-        var start = this.createDate(date + startHours);
-        var end = this.createDate(date + endHours);
-        var calcInterval = new CalcInterval();
-
-        var firstInterval = new Interval();
-        firstInterval.Start = start;
-        firstInterval.ExpectedStart = this.getExpectedDate(date, expectedStart);
-        firstInterval.End = end;
-        firstInterval.ExpectedEnd = this.getExpectedDate(date, expectedEnd);
-        
-        var workedDay = new WorkedDay();
-        workedDay.firstInterval = firstInterval;
-        workedDay.secondInterval = null;
-
-        var totalHours = calcInterval.formatTotalHours(calcInterval.totalDay(workedDay));
-
-        return totalHours;
-    }
-
-    toExcelDateTime(interval) {
-        if (interval == null) return interval;
-        interval.start = (interval.start.valueOf() + 25569) / 86400 / 1000;
-        interval.end = (interval.end.valueOf() + 25569) / 86400 / 1000;
-        return interval;
-    }
 }
 module.exports = Controller;

@@ -5,9 +5,7 @@ var Controller = require("./interval/Controller.js");
 (function () {
     "use strict";
 
-    var cellToHighlight;
     var messageBanner;
-
     // The initialize function must be run each time a new page is loaded.
     Office.initialize = function (reason) {
         $(document).ready(function () {
@@ -22,33 +20,35 @@ var Controller = require("./interval/Controller.js");
                 $('#button-text').text("Display!");
                 $('#button-desc').text("Display the selection");
 
-                $('#highlight-button').click(displaySelectedCells);
                 return;
             }
 
-            $("#template-description").text("This sample highlights the highest value from the cells you have selected in the spreadsheet.");
-
-            //loadSampleData();
-
-            // Add a click event handler for the highlight button.
             $('#highlight-button').click(calculate);
         });
     };
 
-    function loadSampleData() {
+    function validateHoursInput(date, startHours, endHours, expectedStart, expectedEnd) {
+        if (date !== parseInt(date, 10)) {
+            errorHandler("Dia Inválido!");
+            return false;
+        }
 
-        // Run a batch operation against the Excel object model
-        Excel.run(function (ctx) {
-            // Create a proxy object for the active sheet
-            //var sheet = ctx.workbook.worksheets.getActiveWorksheet();
-            // Queue a command to write the sample data to the worksheet
-            //sheet.getRange("B3:D5").values = values;
-            //sheet.getRange("B1:B1").values = [[1000]];
-            //var test = sheet.getCell(3, 1).select();
+        if (startHours !== parseInt(date, 10) || endHours !== parseInt(date, 10)) {
+            return false;
+        }
+        if (expectedStart == null || expectedEnd == null) {
+            errorHandler("Hora inicial e final da jornada está inválida!");
+            return false;
+        }
 
-            // Run the queued-up commands, and return a promise to indicate task completion
-            return ctx.sync();
-        }).catch(errorHandler);
+        return true;
+    }
+
+    function writeResult(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2) {
+        if (validateHoursInput(date, startHours, endHours, expectedStart, expectedEnd) == false || validateHoursInput(date, startHours2, endHours2, expectedStart2, expectedEnd2) == false) return null;
+
+        var controller = new Controller();
+        return controller.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
     }
 
     function calculate() {
@@ -56,57 +56,27 @@ var Controller = require("./interval/Controller.js");
         Excel.run(function (ctx) {
             // Create a proxy object for the selected range and load its properties
             var sourceRange = ctx.workbook.getSelectedRange().load("values, rowCount, columnCount");
-
             return ctx.sync().then(function () {
+
                 var sheet = ctx.workbook.worksheets.getActiveWorksheet();
-                var date = sourceRange.values[0][0];
-                var startHours = sourceRange.values[0][2];
-                var endHours = sourceRange.values[0][3];
 
-                var expectedStart = $("#first-start").val();
-                var expectedEnd = $("#first-end").val();
-                var controller = new Controller();
-                var result = controller.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
-                sourceRange.getCell(0, sourceRange.columnCount).values = [[result]];
-                //sheet.getCell( getRange("N1:B1").values = [[1000]]
-                //var result = calcInterval.roundTens(workedDay);
+                for (var i = 0; i < sourceRange.rowCount; i++) {
+                    var date = sourceRange.values[i][0];
+                    var startHours = sourceRange.values[i][2];
+                    var endHours = sourceRange.values[i][3];
+                    var startHours2 = sourceRange.values[i][4];
+                    var endHours2 = sourceRange.values[i][5];
+
+                    var expectedStart = $("#first-start").val();
+                    var expectedEnd = $("#first-end").val();
+                    var expectedStart2 = $("#second-start").val();
+                    var expectedEnd2 = $("#second-end").val();
+
+                    var result = writeResult(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2);
+                    if (result != null) sourceRange.getCell(i, sourceRange.columnCount).values = [[result]];
+                }
             });
-
-            // Run the queued-up command, and return a promise to indicate task completion
-            /*return ctx.sync()
-                .then(function () {
-                    var highestRow = 0;
-                    var highestCol = 0;
-                    var highestValue = sourceRange.values[0][0];
-                      // Find the cell to highlight
-                    for (var i = 0; i < sourceRange.rowCount; i++) {
-                        for (var j = 0; j < sourceRange.columnCount; j++) {
-                            if (!isNaN(sourceRange.values[i][j]) && sourceRange.values[i][j] > highestValue) {
-                                highestRow = i;
-                                highestCol = j;
-                                highestValue = sourceRange.values[i][j];
-                            }
-                        }
-                    }
-                      cellToHighlight = sourceRange.getCell(highestRow, highestCol);
-                    sourceRange.worksheet.getUsedRange().format.fill.clear();
-                    sourceRange.worksheet.getUsedRange().format.font.bold = false;
-                      // Highlight the cell
-                    cellToHighlight.format.fill.color = "orange";
-                    cellToHighlight.format.font.bold = true;
-                })
-                .then(ctx.sync);*/
         }).catch(errorHandler);
-    }
-
-    function displaySelectedCells() {
-        Office.context.document.getSelectedDataAsync(Office.CoercionType.Text, function (result) {
-            if (result.status === Office.AsyncResultStatus.Succeeded) {
-                showNotification('The selected text is:', '"' + result.value + '"');
-            } else {
-                showNotification('Error', result.error.message);
-            }
-        });
     }
 
     // Helper function for treating errors
@@ -301,7 +271,8 @@ var Controller = function () {
         key: 'calcule',
         value: function calcule(date, startHours, endHours, expectedStart, expectedEnd, secondStartHours, secondEndHours, secondExpectedStart, secondExpectedEnd) {
             var start = this.createDate(date + startHours);
-            var end = this.createDate(date + endHours);
+            var end = endHours > start ? this.createDate(date + endHours) : this.createDate(date + 1 + endHours);
+
             var calcInterval = new CalcInterval();
 
             var firstInterval = new Interval();

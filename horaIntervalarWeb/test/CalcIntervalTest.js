@@ -1,5 +1,6 @@
 ﻿var assert = require('assert');
 const CalcInterval = require('../interval/CalcInterval.js');
+const Controller = require('../interval/Controller.js');
 var Interval = require('../interval/models/Interval.js');
 var WorkedDay = require('../interval/models/WorkedDay.js');
 
@@ -273,7 +274,7 @@ describe('CalcInterval', function () {
     });
 
     describe('#totalDay(workedDay)', function () {
-        it('Should get total day.', function () {
+        it('Should get total day multiple interval.', function () {
             //arrange
             var sut = new CalcInterval();
             var firstInterval = new Interval();
@@ -295,8 +296,27 @@ describe('CalcInterval', function () {
             //act
             var result = sut.totalDay(workedDay);
             //assert
-            assert.equal("09:00", sut.formatTotalHours(result));
+            assert.equal("09:00", new Controller().formatTotalHours(result));
+        });
+
+        it('Should get total day single interval.', function () {
+            //arrange
+            var sut = new CalcInterval();
+            var firstInterval = new Interval();
+            firstInterval.Start = new Date(2017, 0, 24, 07, 55);
+            firstInterval.ExpectedStart = new Date(2017, 0, 24, 08, 00);
+            firstInterval.End = new Date(2017, 0, 24, 11, 58);
+            firstInterval.ExpectedEnd = new Date(2017, 0, 24, 12, 00);
+
+            var workedDay = new WorkedDay();
+            workedDay.firstInterval = firstInterval;
+            workedDay.secondInterval = null;
+
+            //act
+            var result = sut.totalDay(workedDay);
+            //assert
+            assert.equal("04:00", new Controller().formatTotalHours(result));
         });
     });
-
+    
 });
