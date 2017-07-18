@@ -18,37 +18,51 @@
                 
                 return;
             }
-            
             $('#highlight-button').click(calculate);
         });
     };
-    
-    function validateHoursInput(date, startHours, endHours, expectedStart, expectedEnd) {
-        if (date !== parseInt(date, 10)) {
+    /*
+    function validateInput(inputs) {
+        if (isNaN(parseInt(inputs.date, 10))) {
             errorHandler("Dia Inválido!");
             return false;
         }
 
-        if (startHours !== parseInt(date, 10)
-            || endHours !== parseInt(date, 10))
+        if (isNaN(parseInt(inputs.startHours, 10))
+            || isNaN(parseInt(inputs.endHours, 10)))
         {
             return false;
         }
-        if (expectedStart == null
-            || expectedEnd == null)
+        if (inputs.expectedStart.split(":").length != 2
+            || inputs.expectedEnd.split(":").length != 2)
         {
             errorHandler("Hora inicial e final da jornada está inválida!");
             return false;
         }
 
-        return true;
-    }
+        if (!isNaN(parseInt(inputs.startHours2, 10))) {
 
-    function validInput(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2) {
-        if ((validateHoursInput(date, startHours, endHours, expectedStart, expectedEnd) == false)
-            || (validateHoursInput(date, startHours2, endHours2, expectedStart2, expectedEnd2) == false))
-            return false;
+            if (isNaN(parseInt(inputs.endHours2, 10))
+                || inputs.expectedEnd2.split(":").length != 2
+                || inputs.expectedEnd2.split(":").length != 2) return false;
+        }
+        
         return true;
+    }*/
+    
+    function readValues(sourceRange, i) {
+        var result = {};
+        result.date = sourceRange.values[i][0];
+        result.startHours = sourceRange.values[i][2];
+        result.endHours = sourceRange.values[i][3];
+        result.startHours2 = sourceRange.values[i][4];
+        result.endHours2 = sourceRange.values[i][5];
+        
+        result.expectedStart = $("#first-start").val();
+        result.expectedEnd = $("#first-end").val();
+        result.expectedStart2 = $("#second-start").val();
+        result.expectedEnd2 = $("#second-end").val();
+        return result;
     }
 
     function calculate() {
@@ -56,30 +70,28 @@
         Excel.run(function (ctx) {
             // Create a proxy object for the selected range and load its properties
             var sourceRange = ctx.workbook.getSelectedRange().load("values, rowCount, columnCount");
-            return ctx.sync().then(function () {
-                    
-                var sheet = ctx.workbook.worksheets.getActiveWorksheet();
-
-                for (var i = 0; i < sourceRange.rowCount; i++) {
-                    var date = sourceRange.values[i][0];
-                    var startHours = sourceRange.values[i][2];
-                    var endHours = sourceRange.values[i][3];
-                    var startHours2 = sourceRange.values[i][4];
-                    var endHours2 = sourceRange.values[i][5];
-                        
-                    var expectedStart = $("#first-start").val();
-                    var expectedEnd = $("#first-end").val();
-                    var expectedStart2 = $("#second-start").val();
-                    var expectedEnd2 = $("#second-end").val();
-
-                    if (validInput(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2)) {
+            return ctx.sync()
+                .then(function () {
+                    for (var i = 0; i < sourceRange.rowCount; i++) {
+                        var inputs = readValues(sourceRange, i);
+                        //var isValid = validateInput(inputs); 
+                        //if () {
                         var controller = new Controller();
-                        var result = controller.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
-                        sourceRange.getCell(i, sourceRange.columnCount).values = [[result]];
+
+                        var result = controller.calcule(
+                                inputs.date
+                                , inputs.startHours
+                                , inputs.endHours
+                                , inputs.expectedStart
+                                , inputs.expectedEnd
+                                , inputs.startHours2
+                                , inputs.endHours2
+                                , inputs.expectedStart2
+                                , inputs.expectedEnd2);
+                            sourceRange.getCell(i, sourceRange.columnCount).values = [[result]];
                     }
-                        
-                }
-            });
+                })
+                .then(ctx.sync);
         })
         .catch(errorHandler);
     }

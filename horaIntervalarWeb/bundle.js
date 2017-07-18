@@ -22,33 +22,48 @@ var Controller = require("./interval/Controller.js");
 
                 return;
             }
-
             $('#highlight-button').click(calculate);
         });
     };
-
-    function validateHoursInput(date, startHours, endHours, expectedStart, expectedEnd) {
-        if (date !== parseInt(date, 10)) {
+    /*
+    function validateInput(inputs) {
+        if (isNaN(parseInt(inputs.date, 10))) {
             errorHandler("Dia Inválido!");
             return false;
         }
-
-        if (startHours !== parseInt(date, 10) || endHours !== parseInt(date, 10)) {
+          if (isNaN(parseInt(inputs.startHours, 10))
+            || isNaN(parseInt(inputs.endHours, 10)))
+        {
             return false;
         }
-        if (expectedStart == null || expectedEnd == null) {
+        if (inputs.expectedStart.split(":").length != 2
+            || inputs.expectedEnd.split(":").length != 2)
+        {
             errorHandler("Hora inicial e final da jornada está inválida!");
             return false;
         }
-
+          if (!isNaN(parseInt(inputs.startHours2, 10))) {
+              if (isNaN(parseInt(inputs.endHours2, 10))
+                || inputs.expectedEnd2.split(":").length != 2
+                || inputs.expectedEnd2.split(":").length != 2) return false;
+        }
+        
         return true;
-    }
+    }*/
 
-    function writeResult(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2) {
-        if (validateHoursInput(date, startHours, endHours, expectedStart, expectedEnd) == false || validateHoursInput(date, startHours2, endHours2, expectedStart2, expectedEnd2) == false) return null;
+    function readValues(sourceRange, i) {
+        var result = {};
+        result.date = sourceRange.values[i][0];
+        result.startHours = sourceRange.values[i][2];
+        result.endHours = sourceRange.values[i][3];
+        result.startHours2 = sourceRange.values[i][4];
+        result.endHours2 = sourceRange.values[i][5];
 
-        var controller = new Controller();
-        return controller.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
+        result.expectedStart = $("#first-start").val();
+        result.expectedEnd = $("#first-end").val();
+        result.expectedStart2 = $("#second-start").val();
+        result.expectedEnd2 = $("#second-end").val();
+        return result;
     }
 
     function calculate() {
@@ -57,25 +72,16 @@ var Controller = require("./interval/Controller.js");
             // Create a proxy object for the selected range and load its properties
             var sourceRange = ctx.workbook.getSelectedRange().load("values, rowCount, columnCount");
             return ctx.sync().then(function () {
-
-                var sheet = ctx.workbook.worksheets.getActiveWorksheet();
-
                 for (var i = 0; i < sourceRange.rowCount; i++) {
-                    var date = sourceRange.values[i][0];
-                    var startHours = sourceRange.values[i][2];
-                    var endHours = sourceRange.values[i][3];
-                    var startHours2 = sourceRange.values[i][4];
-                    var endHours2 = sourceRange.values[i][5];
+                    var inputs = readValues(sourceRange, i);
+                    //var isValid = validateInput(inputs); 
+                    //if () {
+                    var controller = new Controller();
 
-                    var expectedStart = $("#first-start").val();
-                    var expectedEnd = $("#first-end").val();
-                    var expectedStart2 = $("#second-start").val();
-                    var expectedEnd2 = $("#second-end").val();
-
-                    var result = writeResult(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2);
-                    if (result != null) sourceRange.getCell(i, sourceRange.columnCount).values = [[result]];
+                    var result = controller.calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2);
+                    sourceRange.getCell(i, sourceRange.columnCount).values = [[result]];
                 }
-            });
+            }).then(ctx.sync);
         }).catch(errorHandler);
     }
 
@@ -127,16 +133,6 @@ var CalcInterval = function () {
             return result + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
         }
     }, {
-        key: 'formatTotalHours',
-        value: function formatTotalHours(number) {
-            var totalHours = this.createDate(number);
-            var _h = totalHours.getUTCHours().toString();
-            var _m = totalHours.getUTCMinutes().toString();
-            if (_h.length == 1) _h = "0" + _h;
-            if (_m.length == 1) _m = "0" + _m;
-            return _h + ":" + _m;
-        }
-    }, {
         key: 'totalNegatives',
         value: function totalNegatives(interval) {
             var result = interval.totalStart() < 0 ? interval.totalStart() : 0;
@@ -153,10 +149,8 @@ var CalcInterval = function () {
     }, {
         key: 'roundInterval',
         value: function roundInterval(interval, operation) {
-
             interval.Start = this.roundFives(interval.Start, interval.ExpectedStart - interval.Start, interval.ExpectedStart, operation);
             interval.End = this.roundFives(interval.End, interval.End - interval.ExpectedEnd, interval.ExpectedEnd, operation);
-
             return interval;
         }
     }, {
@@ -184,22 +178,65 @@ var CalcInterval = function () {
                 negatives = negatives + this.totalNegatives(workedDay.secondInterval);
                 positives = positives + this.totalPositives(workedDay.secondInterval);
             }
-
-            if (negatives >= -Math.abs(this.TOTAL_MAX_LIMIT)) {
+            if (negatives != 0 && negatives >= -Math.abs(this.TOTAL_MAX_LIMIT)) {
                 workedDay.firstInterval = this.roundInterval(workedDay.firstInterval, this.NEGATIVE);
                 workedDay.secondInterval = isMultipleInterval ? this.roundInterval(workedDay.secondInterval, this.NEGATIVE) : null;
             }
 
-            if (positives <= this.TOTAL_MAX_LIMIT) {
+            if (positives != 0 && positives <= this.TOTAL_MAX_LIMIT) {
                 workedDay.firstInterval = this.roundInterval(workedDay.firstInterval, this.POSITIVE);
                 workedDay.secondInterval = isMultipleInterval ? this.roundInterval(workedDay.secondInterval, this.POSITIVE) : null;
             }
 
             return workedDay;
         }
+    }]);
+
+    return CalcInterval;
+}();
+
+module.exports = CalcInterval;
+
+},{"./models/Interval.js":5,"./models/WorkedDay.js":6}],3:[function(require,module,exports){
+'use strict';
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var CalcInterval = require('./CalcInterval.js');
+var Factory = require('./Factory.js');
+
+var Controller = function () {
+    function Controller() {
+        _classCallCheck(this, Controller);
+    }
+
+    _createClass(Controller, [{
+        key: 'calcule',
+        value: function calcule(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2) {
+
+            var factory = new Factory();
+            var calcInterval = new CalcInterval();
+            var workedDay = factory.createWorkedDay(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2);
+
+            var result = calcInterval.totalDay(workedDay);
+
+            return this.formatTotalHours(result);
+        }
     }, {
-        key: 'createDate',
-        value: function createDate(number) {
+        key: 'formatTotalHours',
+        value: function formatTotalHours(number) {
+            var totalHours = this.createRoundedDate(number);
+            var _h = totalHours.getUTCHours().toString();
+            var _m = totalHours.getUTCMinutes().toString();
+            if (_h.length == 1) _h = "0" + _h;
+            if (_m.length == 1) _m = "0" + _m;
+            return _h + ":" + _m;
+        }
+    }, {
+        key: 'createRoundedDate',
+        value: function createRoundedDate(number) {
             var result = new Date(number);
             var seconds = result.getSeconds();
 
@@ -216,47 +253,41 @@ var CalcInterval = function () {
         }
     }]);
 
-    return CalcInterval;
+    return Controller;
 }();
 
-module.exports = CalcInterval;
+module.exports = Controller;
 
-},{"./models/Interval.js":4,"./models/WorkedDay.js":5}],3:[function(require,module,exports){
+},{"./CalcInterval.js":2,"./Factory.js":4}],4:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var CalcInterval = require('./CalcInterval.js');
 var Interval = require('./models/Interval.js');
+var CalcInterval = require('./CalcInterval.js');
 var WorkedDay = require('./models/WorkedDay.js');
 
-var Controller = function () {
-    function Controller() {
-        _classCallCheck(this, Controller);
+var Factory = function () {
+    function Factory() {
+        _classCallCheck(this, Factory);
     }
 
-    _createClass(Controller, [{
+    _createClass(Factory, [{
         key: 'createDate',
         value: function createDate(number) {
             var result = new Date((number - 25569) * 86400 * 1000);
             var seconds = result.getSeconds();
+            if (seconds > 30) result.setMinutes(result.getMinutes() + 1);else if (seconds > 0 && seconds < 30) result.setMinutes(result.getMinutes() - 1);
 
-            if (seconds > 30) {
-                result.setMinutes(result.getMinutes() + 1);
-                result.setSeconds(0);
-                return result;
-            } else if (seconds > 0 && seconds < 30) {
-                result.setMinutes(result.getMinutes() - 1);
-                result.setSeconds(0);
-                return result;
-            }
+            result.setMilliseconds(0);
+            result.setSeconds(0);
             return result;
         }
     }, {
-        key: 'getExpectedDate',
-        value: function getExpectedDate(date, value) {
+        key: 'createExpectedDate',
+        value: function createExpectedDate(date, value) {
             var hours = parseInt(value.split(":")[0]);
             var minutes = value.split(":")[1];
             var result = new Date((date - 25569) * 86400 * 1000);
@@ -268,43 +299,59 @@ var Controller = function () {
             return result;
         }
     }, {
-        key: 'calcule',
-        value: function calcule(date, startHours, endHours, expectedStart, expectedEnd, secondStartHours, secondEndHours, secondExpectedStart, secondExpectedEnd) {
+        key: 'createWorkedDay',
+        value: function createWorkedDay(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2) {
+
+            var expectedDate = date;
+            var workedDay = new WorkedDay();
+
+            workedDay.firstInterval = this.createInterval(date, startHours, endHours, expectedDate, expectedStart, expectedEnd);
+
+            if (this.isMultipleInterval(startHours2)) {
+
+                expectedDate = expectedStart2 < expectedEnd ? expectedDate + 1 : expectedDate;
+                date = startHours2 < endHours ? date + 1 : date;
+
+                workedDay.secondInterval = this.createInterval(date, startHours2, endHours2, expectedDate, expectedStart2, expectedEnd2);
+            } else {
+                workedDay.secondInterval = null;
+            }
+
+            return workedDay;
+        }
+    }, {
+        key: 'createInterval',
+        value: function createInterval(date, startHours, endHours, expectedDate, expectedStart, expectedEnd) {
             var start = this.createDate(date + startHours);
-            var end = endHours > start ? this.createDate(date + endHours) : this.createDate(date + 1 + endHours);
+            if (endHours < startHours) {
+                date = date + 1;
+            }
+            var end = this.createDate(date + endHours);
 
             var calcInterval = new CalcInterval();
 
-            var firstInterval = new Interval();
-            firstInterval.Start = start;
-            firstInterval.ExpectedStart = this.getExpectedDate(date, expectedStart);
-            firstInterval.End = end;
-            firstInterval.ExpectedEnd = this.getExpectedDate(date, expectedEnd);
+            var result = new Interval();
+            result.Start = start;
+            result.ExpectedStart = this.createExpectedDate(expectedDate, expectedStart);
+            result.End = end;
+            if (expectedEnd < expectedStart) expectedDate = expectedDate + 1;
+            result.ExpectedEnd = this.createExpectedDate(expectedDate, expectedEnd);
 
-            var workedDay = new WorkedDay();
-            workedDay.firstInterval = firstInterval;
-            workedDay.secondInterval = null;
-
-            var totalHours = calcInterval.formatTotalHours(calcInterval.totalDay(workedDay));
-
-            return totalHours;
+            return result;
         }
     }, {
-        key: 'toExcelDateTime',
-        value: function toExcelDateTime(interval) {
-            if (interval == null) return interval;
-            interval.start = (interval.start.valueOf() + 25569) / 86400 / 1000;
-            interval.end = (interval.end.valueOf() + 25569) / 86400 / 1000;
-            return interval;
+        key: 'isMultipleInterval',
+        value: function isMultipleInterval(startHours2) {
+            return !isNaN(parseInt(startHours2, 10));
         }
     }]);
 
-    return Controller;
+    return Factory;
 }();
 
-module.exports = Controller;
+module.exports = Factory;
 
-},{"./CalcInterval.js":2,"./models/Interval.js":4,"./models/WorkedDay.js":5}],4:[function(require,module,exports){
+},{"./CalcInterval.js":2,"./models/Interval.js":5,"./models/WorkedDay.js":6}],5:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -365,7 +412,7 @@ var Interval = function () {
 
 module.exports = Interval;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -402,4 +449,4 @@ var WorkedDay = function () {
 
 module.exports = WorkedDay;
 
-},{"./Interval.js":4}]},{},[1]);
+},{"./Interval.js":5}]},{},[1]);
