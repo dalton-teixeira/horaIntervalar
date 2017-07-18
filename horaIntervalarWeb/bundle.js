@@ -25,31 +25,29 @@ var Controller = require("./interval/Controller.js");
             $('#highlight-button').click(calculate);
         });
     };
-    /*
+
     function validateInput(inputs) {
         if (isNaN(parseInt(inputs.date, 10))) {
             errorHandler("Dia Inválido!");
             return false;
         }
-          if (isNaN(parseInt(inputs.startHours, 10))
-            || isNaN(parseInt(inputs.endHours, 10)))
-        {
+
+        if (isNaN(parseInt(inputs.startHours, 10)) || isNaN(parseInt(inputs.endHours, 10))) {
             return false;
         }
-        if (inputs.expectedStart.split(":").length != 2
-            || inputs.expectedEnd.split(":").length != 2)
-        {
+        if (inputs.expectedStart.split(":").length != 2 || inputs.expectedEnd.split(":").length != 2) {
             errorHandler("Hora inicial e final da jornada está inválida!");
             return false;
         }
-          if (!isNaN(parseInt(inputs.startHours2, 10))) {
+        /*
+        if (!isNaN(parseInt(inputs.startHours2, 10))) {
               if (isNaN(parseInt(inputs.endHours2, 10))
                 || inputs.expectedEnd2.split(":").length != 2
                 || inputs.expectedEnd2.split(":").length != 2) return false;
-        }
-        
+        }*/
+
         return true;
-    }*/
+    }
 
     function readValues(sourceRange, i) {
         var result = {};
@@ -74,12 +72,10 @@ var Controller = require("./interval/Controller.js");
             return ctx.sync().then(function () {
                 for (var i = 0; i < sourceRange.rowCount; i++) {
                     var inputs = readValues(sourceRange, i);
-                    //var isValid = validateInput(inputs); 
-                    //if () {
-                    var controller = new Controller();
-
-                    var result = controller.calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2);
-                    sourceRange.getCell(i, sourceRange.columnCount).values = [[result]];
+                    if (validateInput(inputs)) {
+                        var result = new Controller().calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2);
+                        sourceRange.getCell(i, sourceRange.columnCount).values = [[result]];
+                    }
                 }
             }).then(ctx.sync);
         }).catch(errorHandler);
@@ -219,6 +215,8 @@ var Controller = function () {
             var factory = new Factory();
             var calcInterval = new CalcInterval();
             var workedDay = factory.createWorkedDay(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2);
+
+            if (expectedStart2 === undefined || expectedStart2 == null || expectedStart2 == "") expectedStart2, expectedEnd2 = expectedEnd;
 
             var result = calcInterval.totalDay(workedDay);
 

@@ -25,6 +25,9 @@ class Controller {
                 , expectedStart2
                 , expectedEnd2);
 
+        if (expectedStart2 === undefined || expectedStart2 == null || expectedStart2 == "")
+            expectedStart2, expectedEnd2 = expectedEnd;
+        
         var result = calcInterval.totalDay(workedDay);
 
         return this.formatTotalHours(result);
