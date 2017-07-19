@@ -76,8 +76,8 @@ var Controller = require("./interval/Controller.js");
                     if (validateInput(inputs)) {
                         var controller = new Controller();
                         var totalHours = controller.calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2, inputs.continued);
+                        var totalNightHours = controller.totalNightHours(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2, inputs.continued);
                         sourceRange.getCell(i, sourceRange.columnCount).values = [[totalHours]];
-                        var totalNightHours = controller.totalNightHours(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2);
                         sourceRange.getCell(i, sourceRange.columnCount + 1).values = [[totalNightHours]];
                     }
                 }
@@ -131,13 +131,34 @@ var CalcInterval = function () {
             var continued = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
             workedDay = this.roundTens(workedDay);
-            var totalHours = workedDay.firstInterval.End - workedDay.firstInterval.Start;
-            if (workedDay.secondInterval != null) totalHours = totalHours + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+            var totalHours = this.getSimpleTotalHours(workedDay);
 
             var nightHours = new NightHours();
             var regular = totalHours - nightHours.reducedHoursNoFactor(workedDay, continued);
             var result = regular + nightHours.reducedHours(workedDay, continued);
             return result;
+        }
+    }, {
+        key: 'getRegularHours',
+        value: function getRegularHours(workedDay) {
+            var continued = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+            var totalHours = this.getSimpleTotalHours(workedDay);
+            return totalHours - new NightHours().reducedHoursNoFactor(workedDay, continued);
+        }
+    }, {
+        key: 'getSimpleTotalHours',
+        value: function getSimpleTotalHours(workedDay) {
+            var totalHours = workedDay.firstInterval.End - workedDay.firstInterval.Start;
+            if (workedDay.secondInterval != null) totalHours = totalHours + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+            return totalHours;
+        }
+    }, {
+        key: 'totalNightReduced',
+        value: function totalNightReduced(workedDay) {
+            var continued = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
+            return this.totalDay(workedDay, continued) - this.getRegularHours(workedDay, continued);
         }
     }, {
         key: 'totalNegatives',
@@ -232,18 +253,16 @@ var Controller = function () {
             var workedDay = factory.createWorkedDay(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2);
 
             var result = calcInterval.totalDay(workedDay, continued);
-
             return this.formatTotalHours(result);
         }
     }, {
         key: 'totalNightHours',
         value: function totalNightHours(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2) {
-            var factory = new Factory();
-            var nightHours = new NightHours();
+            var continued = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : true;
 
-            var workedDay = factory.createWorkedDay(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2);
 
-            var result = nightHours.totalNightHours(workedDay);
+            var workedDay = new Factory().createWorkedDay(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2);
+            var result = new CalcInterval().totalNightReduced(workedDay, continued);
 
             return this.formatTotalHours(result);
         }
@@ -251,11 +270,10 @@ var Controller = function () {
         key: 'formatTotalHours',
         value: function formatTotalHours(number) {
             var totalHours = this.createRoundedDate(number);
-            var _h = totalHours.getUTCHours().toString();
-            var _m = totalHours.getUTCMinutes().toString();
-            if (_h.length == 1) _h = "0" + _h;
-            if (_m.length == 1) _m = "0" + _m;
-            return _h + ":" + _m;
+            var _h = parseInt(totalHours.getUTCHours());
+            var _m = totalHours.getUTCMinutes();
+
+            return _h + "." + Math.ceil(_m / 60 * 100);
         }
     }, {
         key: 'createRoundedDate',
@@ -263,14 +281,9 @@ var Controller = function () {
             var result = new Date(number);
             var seconds = result.getSeconds();
 
-            if (seconds > 30) {
+            if (seconds >= 30) {
                 result.setMinutes(result.getMinutes() + 1);
                 result.setSeconds(0);
-                return result;
-            } else if (seconds > 0 && seconds < 30) {
-                result.setMinutes(result.getMinutes() - 1);
-                result.setSeconds(0);
-                return result;
             }
             return result;
         }
