@@ -29,7 +29,6 @@ class Controller {
                 , expectedEnd2);
         
         var result = calcInterval.totalDay(workedDay, continued);
-        
         return this.formatTotalHours(result);
     }
 
@@ -41,11 +40,10 @@ class Controller {
         , startHours2
         , endHours2
         , expectedStart2
-        , expectedEnd2) {
-        var factory = new Factory();
-        var nightHours = new NightHours();
-
-        var workedDay = factory.createWorkedDay(
+        , expectedEnd2
+        , continued = true) {
+        
+        var workedDay = new Factory().createWorkedDay(
             date
             , startHours
             , endHours
@@ -55,32 +53,25 @@ class Controller {
             , endHours2
             , expectedStart2
             , expectedEnd2);
-
-        var result = nightHours.totalNightHours(workedDay);
+        var result = new CalcInterval().totalNightReduced(workedDay, continued);
 
         return this.formatTotalHours(result);
     }
     formatTotalHours(number) {
         var totalHours = this.createRoundedDate(number);
-        var _h = totalHours.getUTCHours().toString();
-        var _m = totalHours.getUTCMinutes().toString();
-        if (_h.length == 1) _h = "0" + _h;
-        if (_m.length == 1) _m = "0" + _m;
-        return _h + ":" + _m;
+        var _h = parseInt(totalHours.getUTCHours());
+        var _m = totalHours.getUTCMinutes();
+        
+        return _h + "." + Math.ceil((_m/60)*100);
     }
 
     createRoundedDate(number) {
         var result = new Date(number);
         var seconds = result.getSeconds();
 
-        if (seconds > 30) {
+        if (seconds >= 30) {
             result.setMinutes(result.getMinutes() + 1);
             result.setSeconds(0);
-            return result;
-        } else if (seconds > 0 && seconds < 30) {
-            result.setMinutes(result.getMinutes() - 1);
-            result.setSeconds(0);
-            return result;
         }
         return result;
     }

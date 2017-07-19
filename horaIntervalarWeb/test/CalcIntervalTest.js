@@ -299,7 +299,7 @@ describe('CalcInterval', function () {
             //act
             var result = sut.totalDay(workedDay);
             //assert
-            assert.equal("09:00", new Controller().formatTotalHours(result));
+            assert.equal(9.0, new Controller().formatTotalHours(result));
         });
 
         it('Should get total day single interval.', function () {
@@ -319,7 +319,7 @@ describe('CalcInterval', function () {
             //act
             var result = sut.totalDay(workedDay);
             //assert
-            assert.equal("04:00", new Controller().formatTotalHours(result));
+            assert.equal("4.0", new Controller().formatTotalHours(result));
         });
     });
     

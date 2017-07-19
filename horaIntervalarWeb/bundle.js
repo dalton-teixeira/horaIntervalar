@@ -61,6 +61,7 @@ var Controller = require("./interval/Controller.js");
         result.expectedEnd = $("#first-end").val();
         result.expectedStart2 = $("#second-start").val();
         result.expectedEnd2 = $("#second-end").val();
+        result.continued = $("#continued").val();
         return result;
     }
 
@@ -73,8 +74,11 @@ var Controller = require("./interval/Controller.js");
                 for (var i = 0; i < sourceRange.rowCount; i++) {
                     var inputs = readValues(sourceRange, i);
                     if (validateInput(inputs)) {
-                        var result = new Controller().calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2);
-                        sourceRange.getCell(i, sourceRange.columnCount).values = [[result]];
+                        var controller = new Controller();
+                        var totalHours = controller.calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2, inputs.continued);
+                        sourceRange.getCell(i, sourceRange.columnCount).values = [[totalHours]];
+                        var totalNightHours = controller.totalNightHours(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2);
+                        sourceRange.getCell(i, sourceRange.columnCount + 1).values = [[totalNightHours]];
                     }
                 }
             }).then(ctx.sync);
@@ -109,6 +113,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var Interval = require('./models/Interval.js');
 var WorkedDay = require('./models/WorkedDay.js');
+var NightHours = require('./NightHours.js');
 
 var CalcInterval = function () {
     function CalcInterval() {
@@ -123,10 +128,16 @@ var CalcInterval = function () {
     _createClass(CalcInterval, [{
         key: 'totalDay',
         value: function totalDay(workedDay) {
+            var continued = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+
             workedDay = this.roundTens(workedDay);
-            var result = workedDay.firstInterval.End - workedDay.firstInterval.Start;
-            if (workedDay.secondInterval == null) return result;
-            return result + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+            var totalHours = workedDay.firstInterval.End - workedDay.firstInterval.Start;
+            if (workedDay.secondInterval != null) totalHours = totalHours + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+
+            var nightHours = new NightHours();
+            var regular = totalHours - nightHours.reducedHoursNoFactor(workedDay, continued);
+            var result = regular + nightHours.reducedHours(workedDay, continued);
+            return result;
         }
     }, {
         key: 'totalNegatives',
@@ -193,7 +204,7 @@ var CalcInterval = function () {
 
 module.exports = CalcInterval;
 
-},{"./models/Interval.js":5,"./models/WorkedDay.js":6}],3:[function(require,module,exports){
+},{"./NightHours.js":5,"./models/Interval.js":6,"./models/WorkedDay.js":7}],3:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -202,6 +213,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
 var CalcInterval = require('./CalcInterval.js');
 var Factory = require('./Factory.js');
+var NightHours = require('./NightHours.js');
 
 var Controller = function () {
     function Controller() {
@@ -211,14 +223,27 @@ var Controller = function () {
     _createClass(Controller, [{
         key: 'calcule',
         value: function calcule(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2) {
+            var continued = arguments.length > 9 && arguments[9] !== undefined ? arguments[9] : true;
+
 
             var factory = new Factory();
             var calcInterval = new CalcInterval();
+
             var workedDay = factory.createWorkedDay(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2);
 
-            if (expectedStart2 === undefined || expectedStart2 == null || expectedStart2 == "") expectedStart2, expectedEnd2 = expectedEnd;
+            var result = calcInterval.totalDay(workedDay, continued);
 
-            var result = calcInterval.totalDay(workedDay);
+            return this.formatTotalHours(result);
+        }
+    }, {
+        key: 'totalNightHours',
+        value: function totalNightHours(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2) {
+            var factory = new Factory();
+            var nightHours = new NightHours();
+
+            var workedDay = factory.createWorkedDay(date, startHours, endHours, expectedStart, expectedEnd, startHours2, endHours2, expectedStart2, expectedEnd2);
+
+            var result = nightHours.totalNightHours(workedDay);
 
             return this.formatTotalHours(result);
         }
@@ -256,7 +281,7 @@ var Controller = function () {
 
 module.exports = Controller;
 
-},{"./CalcInterval.js":2,"./Factory.js":4}],4:[function(require,module,exports){
+},{"./CalcInterval.js":2,"./Factory.js":4,"./NightHours.js":5}],4:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -315,6 +340,8 @@ var Factory = function () {
                 workedDay.secondInterval = null;
             }
 
+            workedDay.date = this.createDate(date);
+
             return workedDay;
         }
     }, {
@@ -349,7 +376,94 @@ var Factory = function () {
 
 module.exports = Factory;
 
-},{"./CalcInterval.js":2,"./models/Interval.js":5,"./models/WorkedDay.js":6}],5:[function(require,module,exports){
+},{"./CalcInterval.js":2,"./models/Interval.js":6,"./models/WorkedDay.js":7}],5:[function(require,module,exports){
+"use strict";
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var NightHours = function () {
+    function NightHours() {
+        _classCallCheck(this, NightHours);
+    }
+
+    _createClass(NightHours, [{
+        key: "totalNightHours",
+        value: function totalNightHours(workedDay) {
+
+            var result = this.getNightHours(workedDay.firstInterval, workedDay.date) + this.getNightHours(workedDay.secondInterval, workedDay.date);
+            return result;
+        }
+    }, {
+        key: "getNightHoursBegin",
+        value: function getNightHoursBegin(date) {
+            var result = new Date(date.getTime());
+            result.setHours(date.getHours() + 22);
+            result.setMinutes(0);
+            result.setSeconds(0);
+            result.setMilliseconds(0);
+            return result;
+        }
+    }, {
+        key: "getNightHours",
+        value: function getNightHours(interval, date) {
+            if (interval === undefined || interval === null) return 0;
+
+            var nightBegin = this.getNightHoursBegin(date);
+
+            if (interval.start >= nightBegin) return interval.end - interval.start;
+            if (interval.end > nightBegin) return interval.end - nightBegin;
+            return 0;
+        }
+    }, {
+        key: "reducedHours",
+        value: function reducedHours(workedDay, continued) {
+            var factor = 1.14285;
+            var result = this.reducedHoursNoFactor(workedDay, continued);
+            return result > 0 ? result * factor : 0;
+        }
+    }, {
+        key: "reducedHoursNoFactor",
+        value: function reducedHoursNoFactor(workedDay, continued) {
+            return continued ? this.totalNightHours(workedDay) : this.getReduced(workedDay.firstInterval, workedDay.date) + this.getReduced(workedDay.secondInterval, workedDay.date);
+        }
+    }, {
+        key: "getReduced",
+        value: function getReduced(interval, date) {
+            var result = 0;
+
+            if (interval === undefined || interval === null) return 0;
+
+            var end = this.getNightHoursEnd(date);
+            var begin = this.getNightHoursBegin(date);
+            if (interval.start >= begin) result = interval.end - interval.start;
+
+            if (interval.end > begin) result = interval.end - begin;
+
+            if (result > 0 && interval.end > end) result = result - (interval.end - end);
+
+            return result;
+        }
+    }, {
+        key: "getNightHoursEnd",
+        value: function getNightHoursEnd(date) {
+            var result = new Date(date.getTime());
+            result.setDate(result.getDate() + 1);
+            result.setHours(5);
+            result.setMinutes(0);
+            result.setSeconds(0);
+            result.setMilliseconds(0);
+            return result;
+        }
+    }]);
+
+    return NightHours;
+}();
+
+module.exports = NightHours;
+
+},{}],6:[function(require,module,exports){
 "use strict";
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -410,7 +524,7 @@ var Interval = function () {
 
 module.exports = Interval;
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -440,6 +554,14 @@ var WorkedDay = function () {
         set: function set(interval) {
             this.secondInterval = interval;
         }
+    }, {
+        key: 'Date',
+        get: function get() {
+            return this.date;
+        },
+        set: function set(date) {
+            this.date = date;
+        }
     }]);
 
     return WorkedDay;
@@ -447,4 +569,4 @@ var WorkedDay = function () {
 
 module.exports = WorkedDay;
 
-},{"./Interval.js":5}]},{},[1]);
+},{"./Interval.js":6}]},{},[1]);

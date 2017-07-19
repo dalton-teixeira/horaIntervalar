@@ -92,7 +92,7 @@ class Factory {
         result.End = end;
         if (expectedEnd < expectedStart) expectedDate = expectedDate + 1;
         result.ExpectedEnd = this.createExpectedDate(expectedDate, expectedEnd);
-
+       
         return result;
     }
 

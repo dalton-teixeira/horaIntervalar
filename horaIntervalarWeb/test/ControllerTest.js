@@ -13,10 +13,9 @@ describe('Controller', function () {
             var expectedEnd = "05:00";
             //act
             var result = sut.totalNightHours(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
-
+            
             //assert
-            assert.equal("09:00", result);
-
+            assert.equal(10.29, result);
         });
     });
     describe('#Calcule()', function () {
@@ -32,10 +31,10 @@ describe('Controller', function () {
             var result = sut.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
 
             //assert
-            assert.equal("03:00", result);
+            assert.equal(3.0, result);
 
         });
-
+        
         it('should return total day formatted.', function () {
             //arrange
             var sut = new Controller();
@@ -43,12 +42,12 @@ describe('Controller', function () {
             var startHours = 0.916666666666667;
             var endHours = 0.2083333333333333;
             var expectedStart = "22:00";
-            var expectedEnd = "05:00";
+            var expectedEnd = "5:00";
             //act
             var result = sut.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
 
             //assert
-            assert.equal("08:00", result);
+            assert.equal(8.0, result);
 
         });
         
@@ -68,7 +67,7 @@ describe('Controller', function () {
             //act
             var result = sut.calcule(
                 date
-                , startHours
+                , startHours    
                 , endHours
                 , expectedStart
                 , expectedEnd
@@ -78,7 +77,7 @@ describe('Controller', function () {
                 , expectedEnd2);
 
             //assert
-            assert.equal("07:15", result);
+            assert.equal(7.25, result);
         });
 
     });

@@ -12,14 +12,28 @@ class CalcInterval {
 
     totalDay(workedDay, continued = true) {
         workedDay = this.roundTens(workedDay);
-        var totalHours = workedDay.firstInterval.End - workedDay.firstInterval.Start;
-        if (workedDay.secondInterval != null) 
-            totalHours = totalHours + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+        var totalHours = this.getSimpleTotalHours(workedDay);
         
         var nightHours = new NightHours();
         var regular = totalHours - nightHours.reducedHoursNoFactor(workedDay, continued);
         var result = regular + nightHours.reducedHours(workedDay, continued);
         return result;
+    }
+
+    getRegularHours(workedDay, continued = true) {
+        var totalHours =this.getSimpleTotalHours(workedDay);
+        return totalHours - new NightHours().reducedHoursNoFactor(workedDay, continued);
+    }
+
+    getSimpleTotalHours(workedDay) {
+        var totalHours = workedDay.firstInterval.End - workedDay.firstInterval.Start;
+        if (workedDay.secondInterval != null)
+            totalHours = totalHours + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+        return totalHours;
+    }
+
+    totalNightReduced(workedDay, continued = true) {
+        return this.totalDay(workedDay, continued) - this.getRegularHours(workedDay, continued);
     }
 
     totalNegatives(interval) {
