@@ -68,6 +68,8 @@ class Factory {
             workedDay.secondInterval = null;
         }
 
+        workedDay.date = this.createDate(date);
+
         return workedDay;
     }
     

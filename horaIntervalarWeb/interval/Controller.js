@@ -14,6 +14,8 @@ class Controller {
 
         var factory = new Factory();
         var calcInterval = new CalcInterval();
+
+
         var workedDay = factory.createWorkedDay(
                 date
                 , startHours
@@ -24,9 +26,6 @@ class Controller {
                 , endHours2
                 , expectedStart2
                 , expectedEnd2);
-
-        if (expectedStart2 === undefined || expectedStart2 == null || expectedStart2 == "")
-            expectedStart2, expectedEnd2 = expectedEnd;
         
         var result = calcInterval.totalDay(workedDay);
 
