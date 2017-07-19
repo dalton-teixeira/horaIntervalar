@@ -80,7 +80,9 @@
                             var totalHours =              controller.calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2, inputs.continued);
                             var totalNightHours = controller.totalNightHours(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2, inputs.continued);
                             sourceRange.getCell(i, sourceRange.columnCount).values = [[totalHours]];
+                            sourceRange.getCell(i, sourceRange.columnCount).set({ numberFormat: "###.####" });
                             sourceRange.getCell(i, sourceRange.columnCount + 1).values = [[totalNightHours]];
+                            sourceRange.getCell(i, sourceRange.columnCount + 1).set({ numberFormat: "###.####" });
                         }
                     }
                 })
