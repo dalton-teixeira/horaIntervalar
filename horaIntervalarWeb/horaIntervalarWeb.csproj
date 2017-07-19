@@ -76,6 +76,7 @@
     <Content Include="Content\fabric.rtl.css" />
     <Content Include="Content\fabric.rtl.min.css" />
     <Content Include="Content\OfficeThemes.css" />
+    <Content Include="interval\NightHours.js" />
     <Content Include="interval\Factory.js" />
     <Content Include="interval\CalcInterval.js" />
     <Content Include="interval\Controller.js" />
@@ -423,6 +424,7 @@
     <Content Include="Scripts\Office\metadata\features.xml" />
     <Content Include="Scripts\Office\MicrosoftAjax.js" />
     <Content Include="test\ControllerTest.js" />
+    <Content Include="test\NightHourTest.js" />
     <Content Include="test\FactoryTest.js" />
     <Content Include="test\CalcIntervalTest.js" />
     <Content Include="Web.config" />

@@ -1,5 +1,6 @@
 ﻿const Interval = require('./models/Interval.js');
 const WorkedDay = require('./models/WorkedDay.js');
+const NightHours = require('./NightHours.js');
 
 class CalcInterval {
     constructor() {
@@ -9,11 +10,16 @@ class CalcInterval {
         this.POSITIVE = '+';
     }
 
-    totalDay(workedDay) {
+    totalDay(workedDay, continued = true) {
         workedDay = this.roundTens(workedDay);
-        var result = workedDay.firstInterval.End - workedDay.firstInterval.Start;
-        if (workedDay.secondInterval == null) return result;
-        return result + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+        var totalHours = workedDay.firstInterval.End - workedDay.firstInterval.Start;
+        if (workedDay.secondInterval != null) 
+            totalHours = totalHours + (workedDay.secondInterval.End - workedDay.secondInterval.Start);
+        
+        var nightHours = new NightHours();
+        var regular = totalHours - nightHours.reducedHoursNoFactor(workedDay, continued);
+        var result = regular + nightHours.reducedHours(workedDay, continued);
+        return result;
     }
 
     totalNegatives(interval) {

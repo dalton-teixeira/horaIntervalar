@@ -205,6 +205,7 @@ describe('CalcInterval', function () {
             var workedDay = new WorkedDay();
             workedDay.firstInterval = firstInterval;
             workedDay.secondInterval = secondInterval;
+            workedDay.date = new Date(2017, 0, 24, 0, 0);
 
             //act
             var result = sut.roundTens(workedDay);
@@ -233,6 +234,7 @@ describe('CalcInterval', function () {
             var workedDay = new WorkedDay();
             workedDay.firstInterval = firstInterval;
             workedDay.secondInterval = secondInterval;
+            workedDay.date = new Date(2017, 0, 24, 0, 0);
 
             //act
             var result = sut.roundTens(workedDay);
@@ -263,6 +265,7 @@ describe('CalcInterval', function () {
             workedDay.firstInterval = firstInterval;
             workedDay.secondInterval = secondInterval;
 
+            workedDay.date = new Date(2017, 0, 24, 0, 0);
             //act
             var result = sut.roundTens(workedDay);
             //assert
@@ -292,7 +295,7 @@ describe('CalcInterval', function () {
             var workedDay = new WorkedDay();
             workedDay.firstInterval = firstInterval;
             workedDay.secondInterval = secondInterval;
-
+            workedDay.date = new Date(2017, 0, 24, 0, 0);
             //act
             var result = sut.totalDay(workedDay);
             //assert
@@ -311,6 +314,7 @@ describe('CalcInterval', function () {
             var workedDay = new WorkedDay();
             workedDay.firstInterval = firstInterval;
             workedDay.secondInterval = null;
+            workedDay.date = new Date(2017, 0, 24, 0, 0);
 
             //act
             var result = sut.totalDay(workedDay);

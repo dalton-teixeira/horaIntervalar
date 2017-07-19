@@ -2,7 +2,23 @@
 const Controller = require('../interval/Controller.js');
 
 describe('Controller', function () {
-    
+    describe('#totalNightHours()', function () {
+        it('should return total night formatted.', function () {
+            //arrange
+            var sut = new Controller();
+            var date = 42742;
+            var startHours = 0.916666666666667;
+            var endHours = 0.2916666666666667;
+            var expectedStart = "22:00";
+            var expectedEnd = "05:00";
+            //act
+            var result = sut.totalNightHours(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
+
+            //assert
+            assert.equal("09:00", result);
+
+        });
+    });
     describe('#Calcule()', function () {
         it('should return total day formatted.', function () {
             //arrange
@@ -10,7 +26,6 @@ describe('Controller', function () {
             var date = 42742;
             var startHours = 0.371527777777;
             var endHours = 0.5034722222;
-            var expectedDate = 42742;
             var expectedStart = "09:00";
             var expectedEnd = "12:00";
             //act
@@ -18,7 +33,23 @@ describe('Controller', function () {
 
             //assert
             assert.equal("03:00", result);
-           
+
+        });
+
+        it('should return total day formatted.', function () {
+            //arrange
+            var sut = new Controller();
+            var date = 42742;
+            var startHours = 0.916666666666667;
+            var endHours = 0.2083333333333333;
+            var expectedStart = "22:00";
+            var expectedEnd = "05:00";
+            //act
+            var result = sut.calcule(date, startHours, endHours, expectedStart, expectedEnd, null, null, null, null);
+
+            //assert
+            assert.equal("08:00", result);
+
         });
         
         it('should return new WorkedDay.', function () {
@@ -49,6 +80,7 @@ describe('Controller', function () {
             //assert
             assert.equal("07:15", result);
         });
+
     });
     
 });

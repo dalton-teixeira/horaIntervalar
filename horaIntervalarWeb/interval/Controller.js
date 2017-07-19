@@ -1,5 +1,6 @@
 ﻿const CalcInterval = require('./CalcInterval.js');
 const Factory = require('./Factory.js');
+const NightHours = require('./NightHours.js');
 class Controller {
         
     calcule(date
@@ -10,12 +11,12 @@ class Controller {
         , startHours2
         , endHours2
         , expectedStart2
-        , expectedEnd2) {
+        , expectedEnd2
+        , continued = true) {
 
         var factory = new Factory();
         var calcInterval = new CalcInterval();
-
-
+        
         var workedDay = factory.createWorkedDay(
                 date
                 , startHours
@@ -27,11 +28,38 @@ class Controller {
                 , expectedStart2
                 , expectedEnd2);
         
-        var result = calcInterval.totalDay(workedDay);
+        var result = calcInterval.totalDay(workedDay, continued);
+        
+        return this.formatTotalHours(result);
+    }
+
+    totalNightHours(date
+        , startHours
+        , endHours
+        , expectedStart
+        , expectedEnd
+        , startHours2
+        , endHours2
+        , expectedStart2
+        , expectedEnd2) {
+        var factory = new Factory();
+        var nightHours = new NightHours();
+
+        var workedDay = factory.createWorkedDay(
+            date
+            , startHours
+            , endHours
+            , expectedStart
+            , expectedEnd
+            , startHours2
+            , endHours2
+            , expectedStart2
+            , expectedEnd2);
+
+        var result = nightHours.totalNightHours(workedDay);
 
         return this.formatTotalHours(result);
     }
-    
     formatTotalHours(number) {
         var totalHours = this.createRoundedDate(number);
         var _h = totalHours.getUTCHours().toString();

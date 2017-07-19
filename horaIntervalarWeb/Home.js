@@ -62,6 +62,7 @@
         result.expectedEnd = $("#first-end").val();
         result.expectedStart2 = $("#second-start").val();
         result.expectedEnd2 = $("#second-end").val();
+        result.continued = $("#continued").val();
         return result;
     }
 
@@ -75,8 +76,11 @@
                     for (var i = 0; i < sourceRange.rowCount; i++) {
                         var inputs = readValues(sourceRange, i);
                         if (validateInput(inputs)) {
-                            var result = new Controller().calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2);
-                            sourceRange.getCell(i, sourceRange.columnCount).values = [[result]];
+                            var controller = new Controller();
+                            var totalHours = controller.calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2, inputs.continued);
+                            sourceRange.getCell(i, sourceRange.columnCount).values = [[totalHours]];
+                            var totalNightHours = controller.totalNightHours(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2);
+                            sourceRange.getCell(i, sourceRange.columnCount + 1).values = [[totalNightHours]];
                         }
                     }
                 })
