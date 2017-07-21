@@ -273,9 +273,10 @@ var Controller = function () {
         value: function formatTotalHours(number) {
             var totalHours = this.createRoundedDate(number);
             var _h = parseInt(totalHours.getUTCHours());
-            var _m = totalHours.getUTCMinutes();
+            var _m = totalHours.getUTCMinutes().toString();
 
-            return _h + "." + Math.ceil(_m / 60 * 100);
+            if (_m.length < 2) _m = _m.length == 1 ? "0" + _m : "00";
+            return _h + ":" + _m;
         }
     }, {
         key: 'createRoundedDate',
