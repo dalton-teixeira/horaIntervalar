@@ -90,7 +90,7 @@ class Factory {
         result.Start = start;
         result.ExpectedStart = this.createExpectedDate(expectedDate, expectedStart);
         result.End = end;
-        if (expectedEnd < expectedStart) expectedDate = expectedDate + 1;
+        if (parseInt(expectedEnd.split(":")[0]) < parseInt(expectedStart.split(":")[0])) expectedDate = expectedDate + 1;
         result.ExpectedEnd = this.createExpectedDate(expectedDate, expectedEnd);
        
         return result;

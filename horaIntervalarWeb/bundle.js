@@ -78,9 +78,7 @@ var Controller = require("./interval/Controller.js");
                         var totalHours = controller.calcule(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2, inputs.continued);
                         var totalNightHours = controller.totalNightHours(inputs.date, inputs.startHours, inputs.endHours, inputs.expectedStart, inputs.expectedEnd, inputs.startHours2, inputs.endHours2, inputs.expectedStart2, inputs.expectedEnd2, inputs.continued);
                         sourceRange.getCell(i, sourceRange.columnCount).values = [[totalHours]];
-                        sourceRange.getCell(i, sourceRange.columnCount).set({ numberFormat: "###.####" });
                         sourceRange.getCell(i, sourceRange.columnCount + 1).values = [[totalNightHours]];
-                        sourceRange.getCell(i, sourceRange.columnCount + 1).set({ numberFormat: "###.####" });
                     }
                 }
             }).then(ctx.sync);
@@ -133,6 +131,7 @@ var CalcInterval = function () {
             var continued = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
             workedDay = this.roundTens(workedDay);
+
             var totalHours = this.getSimpleTotalHours(workedDay);
 
             var nightHours = new NightHours();
@@ -375,7 +374,7 @@ var Factory = function () {
             result.Start = start;
             result.ExpectedStart = this.createExpectedDate(expectedDate, expectedStart);
             result.End = end;
-            if (expectedEnd < expectedStart) expectedDate = expectedDate + 1;
+            if (parseInt(expectedEnd.split(":")[0]) < parseInt(expectedStart.split(":")[0])) expectedDate = expectedDate + 1;
             result.ExpectedEnd = this.createExpectedDate(expectedDate, expectedEnd);
 
             return result;

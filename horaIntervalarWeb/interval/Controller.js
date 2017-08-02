@@ -27,7 +27,7 @@ class Controller {
                 , endHours2
                 , expectedStart2
                 , expectedEnd2);
-        
+
         var result = calcInterval.totalDay(workedDay, continued);
         return this.formatTotalHours(result);
     }

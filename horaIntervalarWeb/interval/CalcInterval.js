@@ -12,6 +12,7 @@ class CalcInterval {
 
     totalDay(workedDay, continued = true) {
         workedDay = this.roundTens(workedDay);
+        
         var totalHours = this.getSimpleTotalHours(workedDay);
         
         var nightHours = new NightHours();
